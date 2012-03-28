@@ -132,7 +132,9 @@ class HistoricalRecords(object):
         }
 
     def post_save(self, instance, created, **kwargs):
-        self.create_historical_record(instance, created and '+' or '~')
+        if not kwargs.get('raw', True):
+            # Don't put in historical records on loaddata
+            self.create_historical_record(instance, created and '+' or '~')
 
     def post_delete(self, instance, **kwargs):
         self.create_historical_record(instance, '-')
