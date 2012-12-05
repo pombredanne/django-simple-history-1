@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+"""setup.py: Django django-simple-history"""
+
 from distutils.core import setup
 import os
 
@@ -15,7 +18,7 @@ for dirpath, dirnames, filenames in os.walk('simple_history'):
     if '__init__.py' in filenames:
         pkg = dirpath.replace(os.path.sep, '.')
         if os.path.altsep:
-            pkg = pgk.replace(os.path.altsep, '.')
+            pkg = pkg.replace(os.path.altsep, '.')
         packages.append(pkg)
     elif filenames:
         # strip 'simple_history/' or 'simple_history\'
@@ -25,15 +28,22 @@ for dirpath, dirnames, filenames in os.walk('simple_history'):
 
 setup(name='simple_history',
       version='1.0',
-      description='Store Django model history with the ability to revert back to a specific change at any time. This includes capturing request.user',
+      description='Store Django model history with the ability to revert back to a '
+                  'specific change at any time. This includes capturing request.user',
       author='Steven Klass',
-      author_email='sklass@7stalks.com',
-      url='https://github.com/rh0dium/django-simple-history',
+      author_email='sklass@pivotalenergysolutions.com',
+      url='https://github.com/pivotal-energy-solutions/django-simple-history',
       package_dir={'simple_history': 'simple_history'},
       packages=packages,
       package_data={'simple_history': data_files},
       classifiers=[
-          "Development Status :: 5 - Production/Stable",
-          "Framework :: Django",
-          ],
-      )
+             'Development Status :: 2 - Pre-Alpha',
+             'Environment :: Web Environment',
+             'Framework :: Django',
+             'Intended Audience :: Developers',
+             'License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)',
+             'Operating System :: OS Independent',
+             'Programming Language :: Python',
+             'Topic :: Software Development',
+      ],
+)
