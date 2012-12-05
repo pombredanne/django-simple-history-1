@@ -12,8 +12,11 @@ __credits__ = ['Steven Klass', ]
 log = logging.getLogger(__name__)
 
 
-urlpatterns = patterns('',
-    url(r'^list/(?P<app_label>\w+)/(?P<model>\w+)/(?P<field>\w+)/(?P<constraint>\w+)$', HistoryListView.as_view(), name='historical_list'),
-    url(r'^list/ajax/(?P<app_label>\w+)/(?P<model>\w+)/(?P<field>\w+)/(?P<constraint>\w+)$', HistoryListView.as_view(),name='historical_ajax_list'),
+urlpatterns = patterns(
+    '',
+    url(r'^list/(?P<app_label>\w+)/(?P<model>\w+)/(?P<field>\w+)/(?P<constraint>\w+)$',
+        HistoryListView.as_view(), name='historical_list'),
+    url(r'^list/ajax/(?P<app_label>\w+)/(?P<model>\w+)/(?P<field>\w+)/(?P<constraint>\w+)$',
+        HistoryListView.as_view(),name='historical_ajax_list'),
 )
 

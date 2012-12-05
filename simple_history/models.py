@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """models.py: Simple History Models"""
 
-__author__    = 'Marty Alchin'
-__date__      = '2011/08/29 20:43:34'
-__credits__   = ['Marty Alchin', 'Corey Bertram', 'Steven Klass']
+__author__ = 'Marty Alchin'
+__date__ = '2011/08/29 20:43:34'
+__credits__ = ['Marty Alchin', 'Corey Bertram', 'Steven Klass']
 
 import copy
 import datetime
@@ -15,12 +15,22 @@ from django.contrib.auth.models import User
 # This is used to store the user id - else just None.
 class CurrentUserField(models.ForeignKey):
     def __init__(self, **kwargs):
+        if 'null' in kwargs:
+            del kwargs['null']
+        if 'to' in kwargs:
+            del kwargs['to']
         super(CurrentUserField, self).__init__(User, null=True, **kwargs)
 
     def contribute_to_class(self, cls, name):
         super(CurrentUserField, self).contribute_to_class(cls, name)
         registry = FieldRegistry()
         registry.add_field(cls, self)
+
+try:
+    from south.modelsinspector import add_introspection_rules
+
+    add_introspection_rules([], ["^apps\.simple_history\.models\.CurrentUserField"])
+except ImportError: pass
 
 class HistoricalRecords(object):
     def contribute_to_class(self, cls, name):
@@ -95,8 +105,9 @@ class HistoricalRecords(object):
                 field.primary_key = False
                 field._unique = False
                 field.db_index = True
+                field.serialize = True
             if fk:
-                fields[field.name+"_id"] = field
+                fields[field.name + "_id"] = field
             else:
                 fields[field.name] = field
 
@@ -116,7 +127,7 @@ class HistoricalRecords(object):
                 ('+', 'Created'),
                 ('~', 'Changed'),
                 ('-', 'Deleted'),
-            )),
+                )),
             'history_object': HistoricalObjectDescriptor(model),
             '__unicode__': lambda self: u'%s as of %s' % (self.history_object,
                                                           self.history_date)
@@ -132,24 +143,24 @@ class HistoricalRecords(object):
         }
 
     def post_save(self, instance, created, **kwargs):
-        if not kwargs.get('raw', True):
-            # Don't put in historical records on loaddata
+        if not kwargs.get('raw', False):
             self.create_historical_record(instance, created and '+' or '~')
 
     def post_delete(self, instance, **kwargs):
         self.create_historical_record(instance, '-')
 
-    def create_historical_record(self, instance, type):
+    def create_historical_record(self, instance, type_obj):
         manager = getattr(instance, self.manager_name)
         attrs = {}
         for field in instance._meta.fields:
-            attrs[field.attname] = getattr(instance, field.attname)
-        manager.create(history_type=type, **attrs)
+            attrs[field.name] = getattr(instance, field.attname)
+        manager.create(history_type=type_obj, **attrs)
+
 
 class HistoricalObjectDescriptor(object):
     def __init__(self, model):
         self.model = model
 
     def __get__(self, instance, owner):
-        values = (getattr(instance, f.attname) for f in self.model._meta.fields)
+        values = (getattr(instance, f.name) for f in self.model._meta.fields)
         return self.model(*values)
