@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 """models.py: Simple History Models"""
 
-__author__ = 'Marty Alchin'
-__date__ = '2011/08/29 20:43:34'
-__credits__ = ['Marty Alchin', 'Corey Bertram', 'Steven Klass']
-
 import copy
 import datetime
 from django.db import models
@@ -12,8 +8,14 @@ from manager import HistoryDescriptor
 from registration import FieldRegistry
 from django.contrib.auth.models import User
 
+__author__ = 'Marty Alchin'
+__date__ = '2011/08/29 20:43:34'
+__credits__ = ['Marty Alchin', 'Corey Bertram', 'Steven Klass']
+
+
 # This is used to store the user id - else just None.
 class CurrentUserField(models.ForeignKey):
+    """A field to store the user id else None"""
     def __init__(self, **kwargs):
         if 'null' in kwargs:
             del kwargs['null']
@@ -22,22 +24,38 @@ class CurrentUserField(models.ForeignKey):
         super(CurrentUserField, self).__init__(User, null=True, **kwargs)
 
     def contribute_to_class(self, cls, name):
+        """Contributor
+        :param name:  Name given
+        :param cls: Class Object
+        """
         super(CurrentUserField, self).contribute_to_class(cls, name)
         registry = FieldRegistry()
         registry.add_field(cls, self)
 
-try:
-    from south.modelsinspector import add_introspection_rules
 
-    add_introspection_rules([], ["^apps\.simple_history\.models\.CurrentUserField"])
-except ImportError: pass
+try:
+    #noinspection PyUnresolvedReferences
+    from south.modelsinspector import add_introspection_rules
+    add_introspection_rules([], ["^simple_history\.models\.CurrentUserField"])
+except ImportError:
+    pass
+
 
 class HistoricalRecords(object):
+    """Historical Record holder"""
     def contribute_to_class(self, cls, name):
+        """Contributor
+        :param name:  Name given
+        :param cls: Class Object
+        """
         self.manager_name = name
         models.signals.class_prepared.connect(self.finalize, sender=cls)
 
     def finalize(self, sender, **kwargs):
+        """Define and finalize the object
+        :param kwargs: Not used
+        :param sender: Object being sent
+        """
         history_model = self.create_history_model(sender)
 
         # The HistoricalRecords object will be discarded,
@@ -53,6 +71,7 @@ class HistoricalRecords(object):
     def create_history_model(self, model):
         """
         Creates a historical model to associate with the model provided.
+        :param model: Model Objecgt
         """
         attrs = self.copy_fields(model)
         attrs.update(self.get_extra_fields(model))
@@ -64,6 +83,7 @@ class HistoricalRecords(object):
         """
         Creates copies of the model's original fields, returning
         a dictionary mapping field name to copied field object.
+        :param model: Model Object
         """
         # Though not strictly a field, this attribute
         # is required for a model to function properly.
@@ -71,7 +91,6 @@ class HistoricalRecords(object):
 
         for field in model._meta.fields:
             field = copy.copy(field)
-            fk = None
 
             if isinstance(field, models.AutoField):
                 # The historical model gets its own AutoField, so any
@@ -117,6 +136,7 @@ class HistoricalRecords(object):
         """
         Returns a dictionary of fields that will be added to the historical
         record model, in addition to the ones returned by copy_fields below.
+        :param model: Model Object
         """
         rel_nm = '_%s_history' % model._meta.object_name.lower()
         return {
@@ -127,7 +147,7 @@ class HistoricalRecords(object):
                 ('+', 'Created'),
                 ('~', 'Changed'),
                 ('-', 'Deleted'),
-                )),
+            )),
             'history_object': HistoricalObjectDescriptor(model),
             '__unicode__': lambda self: u'%s as of %s' % (self.history_object,
                                                           self.history_date)
@@ -137,19 +157,33 @@ class HistoricalRecords(object):
         """
         Returns a dictionary of fields that will be added to
         the Meta inner class of the historical record model.
+        :param model: Model Object
         """
         return {
             'ordering': ('-history_date',),
         }
 
     def post_save(self, instance, created, **kwargs):
+        """Post Save Trigger
+        :param kwargs: Only used for raw
+        :param created: Whether it was created or not
+        :param instance: Instance Object
+        """
         if not kwargs.get('raw', False):
             self.create_historical_record(instance, created and '+' or '~')
 
     def post_delete(self, instance, **kwargs):
+        """Post Delete Trigger
+        :param kwargs: Not Used
+        :param instance: Instance Object
+        """
         self.create_historical_record(instance, '-')
 
     def create_historical_record(self, instance, type_obj):
+        """Create the record
+        :param type_obj: The Type Object
+        :param instance: The Instance in Question
+        """
         manager = getattr(instance, self.manager_name)
         attrs = {}
         for field in instance._meta.fields:
@@ -158,9 +192,11 @@ class HistoricalRecords(object):
 
 
 class HistoricalObjectDescriptor(object):
+    """The descriptor"""
     def __init__(self, model):
         self.model = model
 
     def __get__(self, instance, owner):
+        """Given an owner get the objects"""
         values = (getattr(instance, f.name) for f in self.model._meta.fields)
         return self.model(*values)
