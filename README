@@ -8,8 +8,8 @@ Download the tar.gz, extract it and run the following inside the directory:
 Using this package is _really_ simple; you just have to import HistoricalRecords and create an instance of it on every model you want to historically track.
 
 Append the following line you your MIDDLEWARE_CLASSES
-MIDDLEWARE_CLASSES = ( 
-  'simple_history.middleware.CurrentUserMiddleware', 
+MIDDLEWARE_CLASSES = (
+  'simple_history.middleware.CurrentUserMiddleware',
   )
 
 On your models you need to include the following line at the top:
@@ -33,7 +33,7 @@ class Choice(models.Model):
     votes = models.IntegerField()
 
     history = HistoricalRecords()
-                                        
+
 
 $ ./manage.py shell
 In [2]: from poll.models import Poll, Choice
@@ -80,3 +80,18 @@ Out[20]: <simple_history.manager.HistoryManager object at 0x1cc4290>
 In [21]: Choice.history.all()
 Out[21]: [<HistoricalChoice: Choice object as of 2010-10-25 18:05:30.160595>, <HistoricalChoice: Choice object as of 2010-10-25 18:05:12.183340>, <HistoricalChoice: Choice object as of 2010-10-25 18:04:59.047351>]
 
+## Copyright and license
+
+Copyright (c) 2012-2013 Pivotal Energy Solutions.  All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this work except in compliance with the License.
+You may obtain a copy of the License in the LICENSE file, or at:
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
