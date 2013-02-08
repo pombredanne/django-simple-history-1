@@ -5,9 +5,12 @@ __author__    = 'Marty Alchin'
 __date__      = '2011/08/29 20:43:34'
 __credits__   = ['Marty Alchin', 'Corey Bertram', 'Steven Klass']
 
+from base64 import b64decode
+
 from django.db.models import signals
 from django.utils.functional import curry
 from django.utils.decorators import decorator_from_middleware
+from django.contrib.auth.models import User
 
 from registration import FieldRegistry
 
@@ -18,10 +21,19 @@ class CurrentUserMiddleware(object):
             # We aren't doing anything return..
             return
 
-        if hasattr(request, 'user') and request.user.is_authenticated:
-            user = request.user
+        if 'HTTP_AUTHORIZATION' in request.META:
+            try:
+                username, password = b64decode(request.META['HTTP_AUTHORIZATION']).split(':')
+                user = User.objects.get(username=username)
+                if not user.check_password(password):
+                    user = None
+            except:
+                user = None
         else:
-            user = None
+            if hasattr(request, 'user') and request.user.is_authenticated:
+                user = request.user
+            else:
+                user = None
 
         update_users = curry(self.update_users, user)
         signals.pre_save.connect(update_users, dispatch_uid=request, weak=False)
