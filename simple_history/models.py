@@ -188,7 +188,10 @@ class HistoricalRecords(object):
         attrs = {}
         for field in instance._meta.fields:
             attrs[field.name] = getattr(instance, field.attname)
-        manager.create(history_type=type_obj, **attrs)
+        if type_obj == '~':
+            manager.get_or_create(defaults=dict(history_type=type_obj), **attrs)
+        else:
+            manager.create(history_type=type_obj, **attrs)
 
 
 class HistoricalObjectDescriptor(object):
