@@ -3,6 +3,7 @@
 
 import copy
 import datetime
+from django.core.exceptions import MultipleObjectsReturned
 from django.db import models
 from manager import HistoryDescriptor
 from registration import FieldRegistry
@@ -189,7 +190,10 @@ class HistoricalRecords(object):
         for field in instance._meta.fields:
             attrs[field.name] = getattr(instance, field.attname)
         if type_obj == '~':
-            manager.get_or_create(defaults=dict(history_type=type_obj), **attrs)
+            try:
+                manager.get_or_create(defaults=dict(history_type=type_obj), **attrs)
+            except MultipleObjectsReturned:
+                pass
         else:
             manager.create(history_type=type_obj, **attrs)
 
