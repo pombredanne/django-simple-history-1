@@ -198,6 +198,7 @@ class HistoricalRecords(object):
             manager.create(history_type=type_obj, **attrs)
 
 
+
 class HistoricalObjectDescriptor(object):
     """The descriptor"""
     def __init__(self, model):
