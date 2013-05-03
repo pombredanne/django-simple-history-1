@@ -4,6 +4,7 @@ import json
 import logging
 from pprint import pformat
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
@@ -57,13 +58,22 @@ class HistoryListView(ListView):
         return context
 
     def get_serialized_data(self):
-        """ Serialize the historical data.  Used in AJAX requests to load the table data. """
-
+        """Serialize the historical data.  Used in AJAX requests to load the table data."""
         results = []
         fields = self.get_model_obj()._meta.fields
 
-        href = '<a href="{}">{}</a>'
-        for index, item in enumerate(self.get_queryset()):
+        user_dict = {}
+        object_dict = {}
+        related_dict = {}
+
+        object_list = self.get_queryset().distinct().values()
+
+        href = u'<a href="{}">{}</a>'
+        type_choices = (('+', u'Created'), ('~', u'Changed'), ('-', u'Deleted'))
+        for index, item in enumerate(object_list):
+            data = {"DT_RowId": item.get('history_id'), 0: '',
+                    1: '', 2: '', 3: '-', 4: '-', 5: '-', 6: '-'}
+
             # 0 - Date
             # 1 - Who
             # 2 - Object (if not specific)
@@ -71,58 +81,78 @@ class HistoryListView(ListView):
             # 4 - Field
             # 5 - Previous
             # 6 - Current
-
-            data = {"DT_RowId": item.pk, 0: '', 1: '', 2: '', 3: '-', 4: '-', 5: '-', 6: '-'}
-            data[0] = item.history_date.strftime("%m/%d/%y %H:%M")
-            try:
-                data[1] = href.format(item.history_user.profile.get_absolute_url(),
-                                      item.history_user.get_full_name())
-            except AttributeError: data[1] = "Administrator*"
+            data[0] = item.get('history_date').strftime("%m/%d/%y %H:%M")
 
             try:
-                data_obj = self.get_object(id=item.id)
-                data[2] = href.format(data_obj.get_absolute_url(), str(data_obj))
-            except ObjectDoesNotExist:
-                data[2] = "Deleted"
-            except AttributeError:
-                data[2] = str(data_obj)
-
-            data[3] = item.get_history_type_display()
-            if item.history_type == "+":
-                results.append(data)
-                continue # The first one was created.
+                data[1] = user_dict[item.get('history_user_id')]
+            except KeyError:
+                link = u''
+                try:
+                    user = User.objects.get(id=item.get('history_user_id'))
+                    link = href.format(user.profile.get_absolute_url(),user.get_full_name())
+                except ObjectDoesNotExist:
+                    link = u"Administrator*"
+                data[1] = user_dict[item.get('history_user_id')] = link
 
             try:
-                previous_item = self.get_queryset()[index - 1]
+                data[2] = object_dict[item.get('id')]
+            except KeyError:
+                link, data_obj = u'', u''
+                try:
+                    data_obj = self.get_object(id=item.get('id'))
+                    name = data_obj.__unicode__()
+                    name = name if len(name) < 32 else name[0:32] + u" ..."
+                    link = href.format(data_obj.get_absolute_url(), name)
+                except ObjectDoesNotExist:
+                    link = "Deleted"
+                except AttributeError:
+                    link = data_obj.__unicode__()
+                data[2] = object_dict[item.get('id')] = link
+
+            data[3] = next((y for x, y in type_choices if x == item.get('history_type')), u"-")
+
+
+            try:
+                previous_item = object_list[index - 1]
             except AssertionError:
-                previous_item = None
+                previous_item = {}
             changed_fields, prev_values, cur_values = [], [], []
             for field in fields:
-                if field.name == "modified_date": continue
-
-                prev_value = getattr(previous_item, field.name, "-")
-                prev_value = prev_value if prev_value else "-"
-
-                curr_value = getattr(item, field.name, "-")
-                curr_value = curr_value if curr_value else "-"
+                if field.name == "modified_date":
+                    continue
+                prev_value = previous_item.get(field.name, u"-")
+                prev_value = prev_value if prev_value else u"-"
+                curr_value = item.get(field.name, u"-")
+                curr_value = curr_value if curr_value else u"-"
 
                 # Handle nice choices keys
-                if hasattr(field, '_choices') and len(field._choices) and curr_value != '-':
-                    curr_value = next(
-                        (x[1] for x in field._choices if str(x[0]) == str(curr_value)))
+                if hasattr(field, '_choices') and len(field._choices) and curr_value != u'-':
+                    curr_value = next((x[1] for x in field._choices if str(x[0]) == str(curr_value)))
                 # Handle foreign keys.
-                elif hasattr(field, 'related') and curr_value != '-':
+                elif hasattr(field, 'related') and curr_value != u'-':
                     try:
-                        curr_value = field.related.parent_model.objects.get(id=curr_value)
-                    except ObjectDoesNotExist: curr_value = "Deleted"
+                        curr_value = related_dict[(field.name, curr_value)]
+                    except KeyError:
+                        _v = u'-'
+                        try:
+                            _v = field.related.parent_model.objects.get(id=curr_value).__unicode__()
+                        except ObjectDoesNotExist:
+                            _v = u'Deleted'
+                        curr_value = related_dict[(field.name, curr_value)] = _v
 
-                if hasattr(field, '_choices') and len(field._choices) and prev_value != '-':
-                    prev_value = next(
-                        (x[1] for x in field._choices if str(x[0]) == str(prev_value)))
-                elif hasattr(field, 'related') and prev_value != '-':
+                if hasattr(field, '_choices') and len(field._choices) and prev_value != u'-':
+                    prev_value = next((x[1] for x in field._choices if str(x[0]) == str(prev_value)))
+
+                elif hasattr(field, 'related') and prev_value != u'-':
                     try:
-                        prev_value = field.related.parent_model.objects.get(id=prev_value)
-                    except ObjectDoesNotExist: prev_value = "Deleted"
+                        prev_value = related_dict[(field.name, prev_value)]
+                    except KeyError:
+                        _v = u'-'
+                        try:
+                            _v = field.related.parent_model.objects.get(id=prev_value).__unicode__()
+                        except ObjectDoesNotExist:
+                            _v = u'Deleted'
+                        prev_value = related_dict[(field.name, prev_value)] = _v
 
                 if prev_value != curr_value:
                     changed_fields.append(field.name)
@@ -133,8 +163,9 @@ class HistoryListView(ListView):
                 data[5] = u"<br />".join([unicode(x) for x in prev_values])
                 data[6] = u"<br />".join([unicode(x) for x in cur_values])
                 results.append(data)
+
         results.reverse()
-        #log.debug(pformat(results))
+        # log.debug(pformat(results))
         return results
 
     def get(self, context, **kwargs):

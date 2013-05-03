@@ -39,13 +39,14 @@
     <script style="text/javascript">
         $(document).ready(function() {
             $('#history_{{ app_label }}_{{ model }}_{{ constraint }}').dataTable({
-               'sDom': '<l><"clear">rt<i>',
+               'sDom': '<"top" lf>rt<"bottom"<i><pT>>',
+                "aaSorting": [[ 0, "desc" ]],
+                bPaginate: true,
                "sAjaxSource": "{% url "historical_ajax_list" app_label=app_label model=model field=field constraint=constraint %}",
                "fnInfoCallback": function( oSettings, iStart, iEnd, iMax, iTotal, sPre ){
                    $('#history_count_{{ app_label }}_{{ model }}_{{ constraint }}').html(iTotal);
                    return "Showing "+iStart +" to "+ iEnd+" of "+iTotal+" entries";
                },
-               "aaSorting": [ ],
                "aoColumns": [
                   { 'sWidth': '15%' },
                   { },
@@ -55,7 +56,6 @@
                   { 'sWidth': '15%' },
                   { 'sWidth': '15%' }
                ]
-
             })
             $('#toggle_{{ app_label }}_{{ model }}_{{ constraint }}_history').hide();
             $('#show_hide_{{ app_label }}_{{ model }}_{{ constraint }}_history').click(function() {
