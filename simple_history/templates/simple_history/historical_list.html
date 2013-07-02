@@ -29,13 +29,6 @@
     </div>
     <div class="span-18 last">&nbsp;</div>
 
-    <link rel="stylesheet" href="{{STATIC_URL}}css/legacy_datatables.css" />
-    <script type="text/javascript" language="javascript"
-            src="{{STATIC_URL}}js/jquery.dataTables.min.js"></script>
-    {# This sets up the defaults #}
-    <script type="text/javascript" language="javascript"
-            src="{{STATIC_URL}}js/jquery.dataTables.defaults.js"></script>
-
     <script style="text/javascript">
         $(document).ready(function() {
             $('#history_{{ app_label }}_{{ model }}_{{ constraint }}').dataTable({
