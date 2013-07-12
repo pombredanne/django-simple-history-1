@@ -11,7 +11,6 @@ setup(name='simple_history',
       author_email='sklass@pivotalenergysolutions.com',
       url='https://github.com/pivotal-energy-solutions/django-simple-history',
       download_url='https://github.com/pivotal-energy-solutions/django-simple-history/releases/tag/v1.2.1',
-      url='https://github.com/pivotal-energy-solutions/django-simple-history',
       license='Apache License (2.0)',
       classifiers=[
              'Development Status :: 2 - Pre-Alpha',
