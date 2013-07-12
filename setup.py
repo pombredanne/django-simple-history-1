@@ -4,13 +4,13 @@
 from setuptools import find_packages, setup
 
 setup(name='simple_history',
-      version='1.2',
+      version='1.2.1',
       description='Store Django model history with the ability to revert back to a '
                   'specific change at any time. This includes capturing request.user',
       author='Steven Klass',
       author_email='sklass@pivotalenergysolutions.com',
       url='https://github.com/pivotal-energy-solutions/django-simple-history',
-      download_url='https://github.com/peterldowns/mypackage/tarball/0.1',
+      download_url='https://github.com/pivotal-energy-solutions/django-simple-history/releases/tag/v1.2.1',
       url='https://github.com/pivotal-energy-solutions/django-simple-history',
       license='Apache License (2.0)',
       classifiers=[
