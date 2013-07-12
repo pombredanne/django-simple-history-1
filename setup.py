@@ -4,7 +4,7 @@
 from setuptools import find_packages, setup
 
 setup(name='simple_history',
-      version='1.0',
+      version='1.1',
       description='Store Django model history with the ability to revert back to a '
                   'specific change at any time. This includes capturing request.user',
       author='Steven Klass',
