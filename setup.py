@@ -13,7 +13,7 @@ setup(name='simple_history',
       author='Steven Klass',
       author_email='sklass@pivotalenergysolutions.com',
       url=base_url,
-      download_url='{0}/releases/tag/v{}'.format(base_url, __version__),
+      download_url='{0}/releases/tag/v{1}'.format(base_url, __version__),
       license='Apache License (2.0)',
       classifiers=[
              'Development Status :: 2 - Pre-Alpha',
