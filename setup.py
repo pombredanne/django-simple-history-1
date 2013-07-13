@@ -8,7 +8,7 @@ base_url = 'https://github.com/pivotal-energy-solutions/django-simple-history'
 
 setup(name=__name__,
       version=__version__,
-      description=open('{0}/README.rst'.format(__name__)).read(),
+      description=open('README.rst').read(),
       author=__author__,
       author_email='sklass@pivotalenergysolutions.com',
       url=base_url,
