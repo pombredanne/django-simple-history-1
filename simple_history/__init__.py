@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 __author__ = 'Steven Klass'
-__version_info__ = (1, 2, 9)
+__version_info__ = (1, 3, 0)
 __version__ = 'v' + '.'.join(map(str, __version_info__))
 __date__ = '2010/10/22 4:47:00 PM'
 __credits__ = ['Steven Klass', 'Marty Alchin', 'George Vilches', 'Corey Betram']
