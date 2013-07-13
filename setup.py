@@ -28,5 +28,6 @@ setup(name='simple_history',
       packages=find_packages(exclude=['tests', 'tests.*']),
       package_data={'simple_history': ['static/js/*.js', 'templates/simple_history/*.html']},
       include_package_data=True,
+      zip_safe=False,
       requires=['django (>=1.2)', ],
 )
