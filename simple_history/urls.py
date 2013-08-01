@@ -2,7 +2,7 @@
 
 import logging
 from django.conf.urls import patterns, url
-from simple_history.views import HistoryListView
+from .views import HistoryListView, HistoryDataTableView
 
 __author__ = 'Steven Klass'
 __date__ = '9/18/12 10:46 PM'
@@ -15,8 +15,8 @@ log = logging.getLogger(__name__)
 urlpatterns = patterns(
     '',
     url(r'^list/(?P<app_label>\w+)/(?P<model>\w+)/(?P<field>\w+)/(?P<constraint>\w+)$',
-        HistoryListView.as_view(), name='historical_list'),
+        HistoryDataTableView.as_view(), name='historical_list'),
     url(r'^list/ajax/(?P<app_label>\w+)/(?P<model>\w+)/(?P<field>\w+)/(?P<constraint>\w+)$',
-        HistoryListView.as_view(),name='historical_ajax_list'),
+        HistoryDataTableView.as_view(),name='historical_ajax_list'),
 )
 
