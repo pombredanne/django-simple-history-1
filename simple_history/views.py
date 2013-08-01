@@ -24,12 +24,14 @@ class HistoryDataTableView(DatatableView):
     datatable_options = {
         'columns': [
             ('Date', ['history_date'], 'get_column_Date_data'),
-            ('User', ['history_user__username'], 'get_column_User_data'),
+            ('User', ['history_user__username', 'history_user__first_name',
+                      'history_user__last_name'],
+             'get_column_User_data'),
             ('Object', ['history_object'], 'get_column_Object_data'),
             ('Type', ['history_type'], 'get_column_Type_data'),
-            ('Fields', [], 'get_column_Fields_data'),
-            ('Previous Values', [], 'get_column_Previous_data'),
-            ('Updated Values', [], 'get_column_Updated_data'),
+            ('Fields', None, 'get_column_Fields_data'),
+            ('Previous Values', None, 'get_column_Previous_data'),
+            ('Updated Values', None, 'get_column_Updated_data'),
         ],
         'ordering': ['Add Remove Reject', 'name'],
     }
