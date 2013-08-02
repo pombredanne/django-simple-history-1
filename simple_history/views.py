@@ -136,7 +136,7 @@ class HistoryDataTableView(DatatableView):
                 changed_fields.append(field.name)
                 prev_values.append(prev_value)
                 cur_values.append(curr_value)
-        result = {'fields': [], 'previous': [], 'current': []}
+        result = {'fields': [], 'previous': [], 'updated': []}
         if len(changed_fields):
             result = {'fields': [unicode(x) for x in changed_fields],
                       'previous': [unicode(x) for x in prev_values],
