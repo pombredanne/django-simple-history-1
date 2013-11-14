@@ -132,6 +132,26 @@ class HistoryDataTableView(DatatableView):
                     self._related_dict[(field.name, prev_value)] = _v
                     prev_value = self._related_dict[(field.name, prev_value)]
 
+            if field.__class__.__name__ == "DateTimeField":
+                try:
+                    curr_value = curr_value.strftime('%m/%d/%y %H:%M')
+                except AttributeError:
+                    pass
+                try:
+                    prev_value = prev_value.strftime('%m/%d/%y %H:%M')
+                except AttributeError:
+                    pass
+
+            if field.__class__.__name__ == "DateField":
+                try:
+                    curr_value = curr_value.strftime('%m/%d/%y')
+                except AttributeError:
+                    pass
+                try:
+                    prev_value = prev_value.strftime('%m/%d/%y')
+                except AttributeError:
+                    pass
+
             if prev_value != curr_value:
                 changed_fields.append(field.name)
                 prev_values.append(prev_value)
@@ -335,6 +355,26 @@ class HistoryListView(ListView):
                         # log.debug("Setting P Related ({}, {}) = {}".format(field.name, prev_value,_v))
                         related_dict[(field.name, prev_value)] = _v
                         prev_value = related_dict[(field.name, prev_value)]
+
+                if field.__class__.__name__ == "DateTimeField":
+                    try:
+                        curr_value = curr_value.strftime('%m/%d/%y %H:%M')
+                    except AttributeError:
+                        pass
+                    try:
+                        prev_value = prev_value.strftime('%m/%d/%y %H:%M')
+                    except AttributeError:
+                        pass
+
+                if field.__class__.__name__ == "DateField":
+                    try:
+                        curr_value = curr_value.strftime('%m/%d/%y')
+                    except AttributeError:
+                        pass
+                    try:
+                        prev_value = prev_value.strftime('%m/%d/%y')
+                    except AttributeError:
+                        pass
 
                 if prev_value != curr_value:
                     changed_fields.append(field.name)
