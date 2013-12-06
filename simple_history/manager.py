@@ -23,7 +23,7 @@ class HistoryManager(models.Manager):
         self.model = model
         self.instance = instance
 
-    def get_query_set(self):
+    def get_queryset(self):
         if self.instance is None:
             return super(HistoryManager, self).get_query_set()
 
