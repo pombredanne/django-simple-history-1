@@ -5,6 +5,7 @@ import copy
 import datetime
 from django.core.exceptions import MultipleObjectsReturned
 from django.db import models
+from django.utils.timezone import now
 from manager import HistoryDescriptor
 from registration import FieldRegistry
 from django.contrib.auth.models import User
@@ -142,7 +143,7 @@ class HistoricalRecords(object):
         rel_nm = '_%s_history' % model._meta.object_name.lower()
         return {
             'history_id': models.AutoField(primary_key=True),
-            'history_date': models.DateTimeField(default=datetime.datetime.now),
+            'history_date': models.DateTimeField(default=now),
             'history_user': CurrentUserField(related_name=rel_nm),
             'history_type': models.CharField(max_length=1, choices=(
                 ('+', 'Created'),
