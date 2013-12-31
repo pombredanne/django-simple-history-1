@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-"""urls.py: Django simple_history"""
+# -*- coding: utf-8 -*-
+"""urls.py: Django simple_history"""
 
 from __future__ import unicode_literals
 
