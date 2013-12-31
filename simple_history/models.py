@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """models.py: Simple History Models"""
 
+from __future__ import unicode_literals
+
 import copy
 import datetime
 from django.core.exceptions import MultipleObjectsReturned
@@ -36,7 +38,6 @@ class CurrentUserField(models.ForeignKey):
 
 
 try:
-    #noinspection PyUnresolvedReferences
     from south.modelsinspector import add_introspection_rules
     add_introspection_rules([], ["^simple_history\.models\.CurrentUserField"])
 except ImportError:
@@ -77,9 +78,9 @@ class HistoricalRecords(object):
         """
         attrs = self.copy_fields(model)
         attrs.update(self.get_extra_fields(model))
-        attrs.update(Meta=type('Meta', (), self.get_meta_options(model)))
+        attrs.update(Meta=type(str('Meta'), (), self.get_meta_options(model)))
         name = 'Historical%s' % model._meta.object_name
-        return type(name, (models.Model,), attrs)
+        return type(str(name), (models.Model,), attrs)
 
     def copy_fields(self, model):
         """
@@ -151,8 +152,8 @@ class HistoricalRecords(object):
                 ('-', 'Deleted'),
             )),
             'history_object': HistoricalObjectDescriptor(model),
-            '__unicode__': lambda self: u'%s as of %s' % (self.history_object,
-                                                          self.history_date)
+            '__unicode__': lambda self: '%s as of %s' % (self.history_object,
+                                                         self.history_date)
         }
 
     def get_meta_options(self, model):

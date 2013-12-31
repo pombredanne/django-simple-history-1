@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-"""urls.py: Django simple_history"""
 
+from __future__ import unicode_literals
+
 import logging
 from django.conf.urls import patterns, url
 from .views import HistoryListView, HistoryDataTableView

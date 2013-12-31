@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 """models.py: Simple History Middleware - sued for capturing the user"""
 
-__author__    = 'Marty Alchin'
-__date__      = '2011/08/29 20:43:34'
-__credits__   = ['Marty Alchin', 'Corey Bertram', 'Steven Klass']
+from __future__ import unicode_literals
 
 from base64 import b64decode
 
@@ -13,6 +11,11 @@ from django.utils.decorators import decorator_from_middleware
 from django.contrib.auth.models import User
 
 from registration import FieldRegistry
+
+__author__    = 'Marty Alchin'
+__date__      = '2011/08/29 20:43:34'
+__credits__   = ['Marty Alchin', 'Corey Bertram', 'Steven Klass']
+
 
 class CurrentUserMiddleware(object):
 

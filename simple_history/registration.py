@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """registration.py: Simple History Registration for users"""
 
+from __future__ import unicode_literals
+
 __author__    = 'Marty Alchin'
 __date__      = '2011/08/29 20:43:34'
 __credits__   = ['Marty Alchin', 'Corey Bertram', 'Steven Klass']

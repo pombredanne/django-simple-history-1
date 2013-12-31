@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """manager.py: Simple History Manager"""
 
+from __future__ import unicode_literals
+from django.db import models
+
 __author__ = 'Marty Alchin'
 __date__ = '2011/08/29 20:43:34'
 __credits__ = ['Marty Alchin', 'Corey Bertram', 'Steven Klass']
 
-from django.db import models
 
 class HistoryDescriptor(object):
     def __init__(self, model):
@@ -34,6 +36,27 @@ class HistoryManager(models.Manager):
             filter = {self.instance._meta.pk.name: self.instance.pk}
         return super(HistoryManager, self).get_query_set().filter(**filter)
 
+
+    def latest(self, *args, **kwargs):
+        if not self.instance:
+            raise TypeError("Can't use most_recent() without a %s instance." %\
+                            self.instance._meta.object_name)
+
+        if isinstance(self.instance._meta.pk, models.OneToOneField) and not (
+            self.instance._meta.pk.name).endswith("_ptr"):
+            filter = {self.instance._meta.pk.name + "_id": self.instance.pk}
+        else:
+            filter = {self.instance._meta.pk.name: self.instance.pk}
+
+        filter.update(**kwargs)
+
+        items = super(HistoryManager, self).get_query_set().filter(**filter).order_by("-history_id")
+        try:
+            return items[0]
+        except IndexError:
+            raise self.instance.DoesNotExist(
+                "%s has no historical record." % self.instance._meta.object_name)
+
     def most_recent(self):
         """
         Returns the most recent copy of the instance available in the history.
@@ -41,19 +64,21 @@ class HistoryManager(models.Manager):
         if not self.instance:
             raise TypeError("Can't use most_recent() without a %s instance." %\
                             self.instance._meta.object_name)
-        tmp = []
-        for field in self.instance._meta.fields:
-            if isinstance(field, models.ForeignKey):
-                tmp.append(field.name + "_id")
-            else:
-                tmp.append(field.name)
-        fields = tuple(tmp)
-        try:
-            values = self.values_list(*fields)[0]
-        except IndexError:
-            raise self.instance.DoesNotExist("%s has no historical record." %\
+
+        latest = self.latest()
+        if latest.history_type == '-':
+            raise self.instance.DoesNotExist("%s had already been deleted." %\
                                              self.instance._meta.object_name)
-        return self.instance.__class__(*values)
+
+        kwargs = {}
+        for field in self.instance._meta.fields:
+            field_name = field.name
+            if isinstance(field, models.ForeignKey):
+                field_name = field.name + "_id"
+
+            kwargs[field_name] = getattr(latest, field.name)
+
+        return self.instance.__class__(**kwargs)
 
     def as_of(self, date):
         """
@@ -63,23 +88,21 @@ class HistoryManager(models.Manager):
         if not self.instance:
             raise TypeError("Can't use as_of() without a %s instance." %\
                             self.instance._meta.object_name)
-        tmp = []
-        for field in self.instance._meta.fields:
-            if isinstance(field, models.ForeignKey):
-                tmp.append(field.name + "_id")
-            else:
-                tmp.append(field.name)
-        fields = tuple(tmp)
-        qs = self.filter(history_date__lte=date)
-        try:
-            values = qs.values_list('history_type', *fields)[0]
-        except IndexError:
-            raise self.instance.DoesNotExist("%s had not yet been created." %\
-                                             self.instance._meta.object_name)
-        if values[0] == '-':
+
+        latest = self.latest(history_date__lte=date)
+        if latest.history_type == '-':
             raise self.instance.DoesNotExist("%s had already been deleted." %\
                                              self.instance._meta.object_name)
-        return self.instance.__class__(*values[1:])
+
+        kwargs = {}
+        for field in self.instance._meta.fields:
+            field_name = field.name
+            if isinstance(field, models.ForeignKey):
+                field_name = field.name + "_id"
+
+            kwargs[field_name] = getattr(latest, field.name)
+
+        return self.instance.__class__(**kwargs)
 
     def log(self):
         "Dumps a log for an instance"
