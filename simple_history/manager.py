@@ -104,6 +104,28 @@ class HistoryManager(models.Manager):
 
         return self.instance.__class__(**kwargs)
 
+    def assign_user_to_latest_change(self, user, **kwargs):
+        """This will assign a user to a specific change"""
+        try:
+            latest = self.latest(**kwargs)
+        except self.instance.DoesNotExist:
+            print("No latest")
+            return
+        if user is None:
+            print("No user")
+            return
+        if latest.history_type == '-':
+            raise self.instance.DoesNotExist("%s had already been deleted." %\
+                                             self.instance._meta.object_name)
+        if latest.history_user:
+            if latest.history_user != user:
+                print("Users do not align keeping former")
+            return latest
+        print "Assiging user {} to {}".format(user, latest)
+        latest.history_user = user
+        latest.save()
+        return latest
+
     def log(self):
         "Dumps a log for an instance"
         if not self.instance:
