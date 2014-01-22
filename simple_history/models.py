@@ -31,9 +31,9 @@ class CurrentUserField(models.ForeignKey):
             user_model = settings.AUTH_USER_MODEL
         if 'null' in kwargs:
             del kwargs['null']
-        if 'to' in kwargs:
-            del kwargs['to']
-        super(CurrentUserField, self).__init__(user_model, null=True, **kwargs)
+        if 'to' not in kwargs:
+            kwargs['to'] = user_model
+        super(CurrentUserField, self).__init__(null=True, **kwargs)
 
     def contribute_to_class(self, cls, name):
         """Contributor
