@@ -2,12 +2,14 @@
 """manager.py: Simple History Manager"""
 
 from __future__ import unicode_literals
+import logging
 from django.db import models
 
 __author__ = 'Marty Alchin'
 __date__ = '2011/08/29 20:43:34'
 __credits__ = ['Marty Alchin', 'Corey Bertram', 'Steven Klass']
 
+log = logging.getLogger(__name__)
 
 class HistoryDescriptor(object):
     def __init__(self, model):
@@ -103,6 +105,28 @@ class HistoryManager(models.Manager):
             kwargs[field_name] = getattr(latest, field.name)
 
         return self.instance.__class__(**kwargs)
+
+    def assign_user_to_latest_change(self, user, **kwargs):
+        """This will assign a user to a specific change"""
+        try:
+            latest = self.latest(**kwargs)
+        except self.instance.DoesNotExist:
+            log.debug("Hasn't been created yet - skipping")
+            return
+        if user is None:
+            log.debug("No user provided - skipping")
+            return
+        if latest.history_type == '-':
+            raise self.instance.DoesNotExist("%s had already been deleted." %\
+                                             self.instance._meta.object_name)
+        if latest.history_user:
+            if latest.history_user != user:
+                log.warning("Users do not align keeping former")
+            return latest
+        log.info("Assigning user {} to {}".format(user, latest))
+        latest.history_user = user
+        latest.save()
+        return latest
 
     def log(self):
         "Dumps a log for an instance"
