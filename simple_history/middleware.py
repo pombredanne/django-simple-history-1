@@ -8,7 +8,11 @@ from base64 import b64decode
 from django.db.models import signals
 from django.utils.functional import curry
 from django.utils.decorators import decorator_from_middleware
-from django.contrib.auth.models import User
+try:
+    from django.contrib.auth import get_user_model
+except ImportError:
+    from django.contrib.auth.models import User
+    get_user_model = lambda: User
 
 from registration import FieldRegistry
 
@@ -27,7 +31,7 @@ class CurrentUserMiddleware(object):
         if 'HTTP_AUTHORIZATION' in request.META:
             try:
                 username, password = b64decode(request.META['HTTP_AUTHORIZATION']).split(':')
-                user = User.objects.get(username=username)
+                user = get_user_model().objects.get(username=username)
                 if not user.check_password(password):
                     user = None
             except:

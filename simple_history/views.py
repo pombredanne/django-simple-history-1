@@ -4,16 +4,20 @@
 from __future__ import unicode_literals
 
 import json
-
 import logging
-from pprint import pformat
+
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
+try:
+    from django.contrib.auth import get_user_model
+except ImportError:
+    from django.contrib.auth.models import User
+    get_user_model = lambda: User
+
 from datatableview.views import DatatableView
 
 __author__ = 'Steven Klass'
@@ -286,7 +290,7 @@ class HistoryListView(ListView):
             except KeyError:
                 link = ''
                 try:
-                    user = User.objects.get(id=item.get('history_user_id'))
+                    user = get_user_model().objects.get(id=item.get('history_user_id'))
                     link = href.format(user.profile.get_absolute_url(),user.get_full_name())
                 except ObjectDoesNotExist:
                     link = "Administrator*"
@@ -391,7 +395,6 @@ class HistoryListView(ListView):
                 results.append(data)
 
         results.reverse()
-        # log.debug(pformat(results))
         return results
 
     def get(self, context, **kwargs):

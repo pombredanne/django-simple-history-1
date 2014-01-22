@@ -5,12 +5,14 @@ from __future__ import unicode_literals
 
 import copy
 import datetime
+
 from django.core.exceptions import MultipleObjectsReturned
 from django.db import models
 from django.utils.timezone import now
-from manager import HistoryDescriptor
-from registration import FieldRegistry
-from django.contrib.auth.models import User
+from django.conf import settings
+
+from .manager import HistoryDescriptor
+from .registration import FieldRegistry
 
 __author__ = 'Marty Alchin'
 __date__ = '2011/08/29 20:43:34'
@@ -20,12 +22,18 @@ __credits__ = ['Marty Alchin', 'Corey Bertram', 'Steven Klass']
 # This is used to store the user id - else just None.
 class CurrentUserField(models.ForeignKey):
     """A field to store the user id else None"""
-    def __init__(self, **kwargs):
+    def __init__(self, recursive_to_user=False, **kwargs):
+        # If the base model is the actual User model, it must be referenced by "self", not the full
+        # app label.
+        if recursive_to_user:
+            user_model = 'self'
+        else:
+            user_model = settings.AUTH_USER_MODEL
         if 'null' in kwargs:
             del kwargs['null']
         if 'to' in kwargs:
             del kwargs['to']
-        super(CurrentUserField, self).__init__(User, null=True, **kwargs)
+        super(CurrentUserField, self).__init__(user_model, null=True, **kwargs)
 
     def contribute_to_class(self, cls, name):
         """Contributor
@@ -142,10 +150,12 @@ class HistoricalRecords(object):
         :param model: Model Object
         """
         rel_nm = '_%s_history' % model._meta.object_name.lower()
+        is_user = settings.AUTH_USER_MODEL == ('%s.%s' % (model._meta.app_label,
+                                                          model._meta.object_name))
         return {
             'history_id': models.AutoField(primary_key=True),
             'history_date': models.DateTimeField(default=now),
-            'history_user': CurrentUserField(related_name=rel_nm),
+            'history_user': CurrentUserField(related_name=rel_nm, recursive_to_user=is_user),
             'history_type': models.CharField(max_length=1, choices=(
                 ('+', 'Created'),
                 ('~', 'Changed'),
