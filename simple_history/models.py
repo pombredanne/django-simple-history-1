@@ -22,13 +22,8 @@ __credits__ = ['Marty Alchin', 'Corey Bertram', 'Steven Klass']
 # This is used to store the user id - else just None.
 class CurrentUserField(models.ForeignKey):
     """A field to store the user id else None"""
-    def __init__(self, recursive_to_user=False, **kwargs):
-        # If the base model is the actual User model, it must be referenced by "self", not the full
-        # app label.
-        if recursive_to_user:
-            user_model = 'self'
-        else:
-            user_model = settings.AUTH_USER_MODEL
+    def __init__(self, **kwargs):
+        user_model = settings.AUTH_USER_MODEL
         if 'null' in kwargs:
             del kwargs['null']
         if 'to' not in kwargs:
@@ -150,12 +145,10 @@ class HistoricalRecords(object):
         :param model: Model Object
         """
         rel_nm = '_%s_history' % model._meta.object_name.lower()
-        is_user = settings.AUTH_USER_MODEL == ('%s.%s' % (model._meta.app_label,
-                                                          model._meta.object_name))
         return {
             'history_id': models.AutoField(primary_key=True),
             'history_date': models.DateTimeField(default=now),
-            'history_user': CurrentUserField(related_name=rel_nm, recursive_to_user=is_user),
+            'history_user': CurrentUserField(related_name=rel_nm),
             'history_type': models.CharField(max_length=1, choices=(
                 ('+', 'Created'),
                 ('~', 'Changed'),

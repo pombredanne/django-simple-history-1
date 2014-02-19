@@ -48,10 +48,6 @@ class CurrentUserMiddleware(object):
     def update_users(self, user, sender, instance, **kwargs):
         registry = FieldRegistry()
         if sender in registry:
-            # Avoid making records for AnonymousUser saving a User on every login
-            if sender.__name__ == "Historical%s" % get_user_model().__name__:
-                if not user.is_authenticated():
-                    return
             for field in registry.get_fields(sender):
                 setattr(instance, field.name, user)
 
