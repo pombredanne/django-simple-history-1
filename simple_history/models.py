@@ -183,7 +183,7 @@ class HistoricalRecords(object):
         :param instance: Instance Object
         """
         if not kwargs.get('raw', False):
-            self.create_historical_record(instance, created and '+' or '~')
+            self.create_historical_record(instance, '+' if created else '~')
 
     def post_delete(self, instance, **kwargs):
         """Post Delete Trigger
