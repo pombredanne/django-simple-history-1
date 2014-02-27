@@ -37,7 +37,7 @@ class CurrentUserMiddleware(object):
             except:
                 user = None
         else:
-            if hasattr(request, 'user') and request.user.is_authenticated:
+            if hasattr(request, 'user') and request.user.is_authenticated():
                 user = request.user
             else:
                 user = None
