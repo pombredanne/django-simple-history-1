@@ -62,6 +62,10 @@ class HistoryDataTableView(DatatableView):
     def get_queryset(self):
         """Narrow this based on your company"""
         filter = {self.kwargs.get('field'): self.kwargs.get('constraint')}
+        try:
+            filter['content_type'] = int(self.request.GET.get('content_type_id'))
+        except:
+            pass
         data = self.get_model_obj().history.filter(**filter).order_by("history_id")
         keep_ids, _discard = [], []
         for item in list(data.values()):
