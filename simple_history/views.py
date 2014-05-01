@@ -11,6 +11,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
+from django.utils import formats
 from django.views.generic import ListView
 try:
     from django.contrib.auth import get_user_model
@@ -176,7 +177,9 @@ class HistoryDataTableView(DatatableView):
         return result
 
     def get_column_Date_data(self, obj, *args, **kwargs):
-        return obj.history_date.strftime("%m/%d/%y %H:%M")
+        tz = self.request.user.timezone_preference
+        dts = obj.history_date.astimezone(tz)
+        return formats.date_format(dts, 'SHORT_DATETIME_FORMAT')
 
     def get_column_User_data(self, obj, *args, **kwargs):
 
@@ -186,7 +189,7 @@ class HistoryDataTableView(DatatableView):
             link = ''
             try:
                 name = obj.history_user.get_full_name()
-                url = obj.history_user.profile.get_absolute_url()
+                url = obj.history_user.get_absolute_url()
                 link = "<a href='{}'>{}</a>".format(url, name)
             except (AttributeError, ObjectDoesNotExist):
                 link = "Administrator*"
@@ -295,7 +298,7 @@ class HistoryListView(ListView):
                 link = ''
                 try:
                     user = get_user_model().objects.get(id=item.get('history_user_id'))
-                    link = href.format(user.profile.get_absolute_url(),user.get_full_name())
+                    link = href.format(user.get_absolute_url(),user.get_full_name())
                 except ObjectDoesNotExist:
                     link = "Administrator*"
                 user_dict[item.get('history_user_id')] = link
