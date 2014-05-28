@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 __name__ = 'simple_history'
 __author__ = 'Steven Klass'
 __version_info__ = (1, 3, 6)
