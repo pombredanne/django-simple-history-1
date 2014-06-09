@@ -112,7 +112,10 @@ class HistoryDataTableView(DatatableView):
 
             # Handle nice choices keys
             if hasattr(field, '_choices') and len(field._choices) and curr_value != '-':
-                curr_value = next((x[1] for x in field._choices if str(x[0]) == str(curr_value)))
+                try:
+                    curr_value = next((x[1] for x in field._choices if str(x[0]) == str(curr_value)))
+                except StopIteration:
+                    pass
             # Handle foreign keys.
             elif hasattr(field, 'related') and curr_value != '-':
                 try:
