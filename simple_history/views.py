@@ -125,6 +125,8 @@ class HistoryDataTableView(DatatableView):
                     _v = '-'
                     try:
                         _v = field.related.parent_model.objects.get(id=curr_value).__unicode__()
+                        if hasattr(self.request, 'user') and self.request.user.is_superuser:
+                            _v = "[{}] {}".format(curr_value, _v)
                     except ObjectDoesNotExist:
                         _v = 'Deleted'
                     # log.debug("Setting C Related ({}, {}) = {}".format(field.name, curr_value,_v))
@@ -142,6 +144,8 @@ class HistoryDataTableView(DatatableView):
                     _v = '-'
                     try:
                         _v = field.related.parent_model.objects.get(id=prev_value).__unicode__()
+                        if hasattr(self.request, 'user') and self.request.user.is_superuser:
+                            _v = "[{}] {}".format(prev_value, _v)
                     except ObjectDoesNotExist:
                         _v = 'Deleted'
                     # log.debug("Setting P Related ({}, {}) = {}".format(field.name, prev_value,_v))
