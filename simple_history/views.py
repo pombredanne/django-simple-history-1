@@ -102,7 +102,13 @@ class HistoryDataTableView(DatatableView):
         """Given an index number get the delta between the prior item"""
         fields = self.get_model_obj()._meta.fields
         item = object_list[index]
-        previous_item = object_list[index - 1] if index >= 1 else {}
+
+        previous_item = {}
+        for old_item in reversed(object_list[:index]):
+            if old_item.get('id') == item.get('id'):
+                previous_item = old_item
+                break
+
         changed_fields, prev_values, cur_values = [], [], []
         for field in fields:
             prev_value = previous_item.get(field.name, "-")
