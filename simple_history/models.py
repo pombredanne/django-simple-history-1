@@ -8,6 +8,7 @@ import datetime
 
 from django.core.exceptions import MultipleObjectsReturned
 from django.db import models
+from django.db.models import SET_NULL
 from django.utils.timezone import now
 from django.conf import settings
 
@@ -28,7 +29,9 @@ class CurrentUserField(models.ForeignKey):
             del kwargs['null']
         if 'to' not in kwargs:
             kwargs['to'] = user_model
-        super(CurrentUserField, self).__init__(null=True, **kwargs)
+        if 'on_delete' in kwargs:
+            del kwargs['on_delete']
+        super(CurrentUserField, self).__init__(null=True, on_delete=SET_NULL, **kwargs)
 
     def contribute_to_class(self, cls, name):
         """Contributor
