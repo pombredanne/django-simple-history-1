@@ -140,7 +140,10 @@ class HistoryDataTableView(DatatableView):
                     curr_value = self._related_dict[(field.name, curr_value)]
 
             if hasattr(field, '_choices') and len(field._choices) and prev_value != '-':
-                prev_value = next((x[1] for x in field._choices if str(x[0]) == str(prev_value)))
+                try:
+                    prev_value = next((x[1] for x in field._choices if str(x[0]) == str(prev_value)))
+                except StopIteration:
+                    pass
 
             elif hasattr(field, 'related') and prev_value != '-':
                 try:
