@@ -21,6 +21,8 @@ except ImportError:
 
 from datatableview.views import DatatableView
 
+from .utils import get_revision_delta
+
 __author__ = 'Steven Klass'
 __date__ = '9/18/12 10:46 PM'
 __copyright__ = 'Copyright 2012 Pivotal Energy Solutions. All rights reserved.'
@@ -96,101 +98,7 @@ class HistoryDataTableView(DatatableView):
         self._fields = {}
         for index in range(len(object_list)):
             _id = object_list[index]['history_id']
-            self._fields[_id] = self._get_fields_changed_current_delta(index, object_list)
-
-    def _get_fields_changed_current_delta(self, index, object_list):
-        """Given an index number get the delta between the prior item"""
-        fields = self.get_model_obj()._meta.fields
-        item = object_list[index]
-
-        previous_item = {}
-        for old_item in reversed(object_list[:index]):
-            if old_item.get('id') == item.get('id'):
-                previous_item = old_item
-                break
-
-        changed_fields, prev_values, cur_values = [], [], []
-        for field in fields:
-            prev_value = previous_item.get(field.name, "-")
-            prev_value = prev_value if prev_value else "-"
-            curr_value = item.get(field.name, "-")
-            curr_value = curr_value if curr_value else "-"
-
-            # Handle nice choices keys
-            if hasattr(field, '_choices') and len(field._choices) and curr_value != '-':
-                try:
-                    curr_value = next((x[1] for x in field._choices if str(x[0]) == str(curr_value)))
-                except StopIteration:
-                    pass
-            # Handle foreign keys.
-            elif hasattr(field, 'related') and curr_value != '-':
-                try:
-                    curr_value = self._related_dict[(field.name, curr_value)]
-                    # log.debug("Related (current) Dict - Query Saved {} = {}".format(field.name, curr_value))
-                except KeyError:
-                    _v = '-'
-                    try:
-                        _v = field.related.parent_model.objects.get(id=curr_value).__unicode__()
-                        if hasattr(self.request, 'user') and self.request.user.is_superuser:
-                            _v = "[{}] {}".format(curr_value, _v)
-                    except ObjectDoesNotExist:
-                        _v = 'Deleted'
-                    # log.debug("Setting C Related ({}, {}) = {}".format(field.name, curr_value,_v))
-                    self._related_dict[(field.name, curr_value)] = _v
-                    curr_value = self._related_dict[(field.name, curr_value)]
-
-            if hasattr(field, '_choices') and len(field._choices) and prev_value != '-':
-                try:
-                    prev_value = next((x[1] for x in field._choices if str(x[0]) == str(prev_value)))
-                except StopIteration:
-                    pass
-
-            elif hasattr(field, 'related') and prev_value != '-':
-                try:
-                    prev_value = self._related_dict[(field.name, prev_value)]
-                    # log.debug("Related (prev) Dict - Query Saved {} = {}".format(field.name, prev_value))
-                except KeyError:
-                    _v = '-'
-                    try:
-                        _v = field.related.parent_model.objects.get(id=prev_value).__unicode__()
-                        if hasattr(self.request, 'user') and self.request.user.is_superuser:
-                            _v = "[{}] {}".format(prev_value, _v)
-                    except ObjectDoesNotExist:
-                        _v = 'Deleted'
-                    # log.debug("Setting P Related ({}, {}) = {}".format(field.name, prev_value,_v))
-                    self._related_dict[(field.name, prev_value)] = _v
-                    prev_value = self._related_dict[(field.name, prev_value)]
-
-            if field.__class__.__name__ == "DateTimeField":
-                try:
-                    curr_value = curr_value.strftime('%m/%d/%y %H:%M')
-                except AttributeError:
-                    pass
-                try:
-                    prev_value = prev_value.strftime('%m/%d/%y %H:%M')
-                except AttributeError:
-                    pass
-
-            if field.__class__.__name__ == "DateField":
-                try:
-                    curr_value = curr_value.strftime('%m/%d/%y')
-                except AttributeError:
-                    pass
-                try:
-                    prev_value = prev_value.strftime('%m/%d/%y')
-                except AttributeError:
-                    pass
-
-            if prev_value != curr_value:
-                changed_fields.append(field.name)
-                prev_values.append(prev_value)
-                cur_values.append(curr_value)
-        result = {'fields': [], 'previous': [], 'updated': []}
-        if len(changed_fields):
-            result = {'fields': [unicode(x) for x in changed_fields],
-                      'previous': [unicode(x) for x in prev_values],
-                      'updated': [unicode(x) for x in cur_values]}
-        return result
+            self._fields[_id] = get_revision_delta(self.get_model_obj(), object_list, index, user=self.request.user)
 
     def get_column_Date_data(self, obj, *args, **kwargs):
         tz = self.request.user.timezone_preference
