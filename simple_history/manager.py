@@ -29,14 +29,14 @@ class HistoryManager(models.Manager):
 
     def get_queryset(self):
         if self.instance is None:
-            return super(HistoryManager, self).get_query_set()
+            return super(HistoryManager, self).get_queryset()
 
         if isinstance(self.instance._meta.pk, models.OneToOneField) and not (
             self.instance._meta.pk.name).endswith("_ptr"):
             filter = {self.instance._meta.pk.name + "_id": self.instance.pk}
         else:
             filter = {self.instance._meta.pk.name: self.instance.pk}
-        return super(HistoryManager, self).get_query_set().filter(**filter)
+        return super(HistoryManager, self).get_queryset().filter(**filter)
 
 
     def latest(self, *args, **kwargs):
@@ -52,7 +52,7 @@ class HistoryManager(models.Manager):
 
         filter.update(**kwargs)
 
-        items = super(HistoryManager, self).get_query_set().filter(**filter).order_by("-history_id")
+        items = super(HistoryManager, self).get_queryset().filter(**filter).order_by("-history_id")
         try:
             return items[0]
         except IndexError:
@@ -145,7 +145,7 @@ class HistoryManager(models.Manager):
         _created, _created_by = None, None
 
         fields = self.instance._meta.fields
-        items = super(HistoryManager, self).get_query_set().filter(**filter).order_by("history_id")
+        items = super(HistoryManager, self).get_queryset().filter(**filter).order_by("history_id")
 
         for index, item in enumerate(items):
             if index == 0:
