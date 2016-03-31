@@ -108,3 +108,50 @@ def get_revision_delta(model, object_list, index, user=None):
                   'previous': [unicode(x) for x in prev_values],
                   'updated': [unicode(x) for x in cur_values]}
     return result
+
+
+def clean_duplicate_history_data(model_obj, object_id=None, dry_run=True):
+    """Given a model object remove duplicate historical items."""
+    try:
+        model_obj.history.all()
+    except AttributeError:
+        raise AttributeError("{} does not appear to have history assigned to it".format(model_obj))
+
+    ignore = ['id', 'history_id', 'history_date', 'history_user',]
+
+    # Make sure these are upfront.
+    fields = ['id', 'history_id']
+    fields += [f.name for f in model_obj.history.model._meta.fields if f.name not in ignore]
+
+    if 'modified_date' in fields:
+        fields.pop(fields.index('modified_date'))
+
+    last_records = {}
+    duplicate_history_entries = []
+
+    log.info("Using {} fields - {}".format(len(fields), fields))
+    history = model_obj.history.all()
+    if object_id:
+        history = history.filter(id=object_id)
+    initial = history.count()
+    log.info("Analyzing {} historical records for {}".format(initial, model_obj))
+
+    for item in history.order_by('history_date').values_list(*fields):
+        item = list(item)
+        _id = item.pop(0)
+        _history_id = item.pop(0)
+        if _id not in last_records.keys():
+            last_records[_id] = item
+            continue
+        if item == last_records[_id]:
+            duplicate_history_entries.append(_history_id)
+            log.debug("Duplicate found - {}".format(item))
+        else:
+            last_records[_id] = item
+
+    if not dry_run:
+        model_obj.history.filter(history_id__in=duplicate_history_entries).delete()
+
+    pct = "{:.1%}".format(float(len(duplicate_history_entries))/initial)
+    log.info("{} ({}/{}) historical records for {} removed".format(pct, len(duplicate_history_entries), initial, model_obj))
+
